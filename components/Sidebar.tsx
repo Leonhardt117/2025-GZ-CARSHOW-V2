@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Hall } from '../types';
 
@@ -24,10 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
     if (highlightedBrandId && hall) {
         const el = document.getElementById(`brand-${highlightedBrandId}`);
         if (el) {
-            // Adjusted scrolling to center vertically but not horizontally to prevent layout shifting
             el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            
-            // Add a temporary highlight class
             el.classList.add('ring-2', 'ring-amber-500', 'bg-slate-800');
             setTimeout(() => {
                 el.classList.remove('ring-2', 'ring-amber-500');
@@ -51,10 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
     );
   }
 
-  // Sort brands by booth number for list
   const sortedBrands = [...hall.brands].sort((a, b) => a.booth.localeCompare(b.booth));
-  
-  // Image path strategy: public/hall-maps/1.1.png
   const mapImageUrl = `/hall-maps/${hall.code}.png`;
 
   return (
@@ -102,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
         </div>
       </div>
 
-      {/* Image Modal (Lightbox) */}
+      {/* Image Modal */}
       {isImageModalOpen && (
         <div 
             className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
@@ -168,12 +163,19 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                                 <div className="text-[10px] text-slate-500 font-semibold mb-1.5 uppercase tracking-wider">重点新车 (Highlights)</div>
                                 <div className="grid grid-cols-1 gap-1.5">
                                     {brand.models.map((model, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-slate-900/60 px-2 py-1.5 rounded border border-slate-700/40 text-sm">
-                                            <span className="text-slate-300 truncate mr-2">{model.name}</span>
-                                            {model.highlight && (
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${model.isNewLaunch ? 'bg-red-900/40 text-red-300 border border-red-900/50' : 'bg-blue-900/40 text-blue-300 border border-blue-900/50'}`}>
-                                                    {model.highlight}
-                                                </span>
+                                        <div key={idx} className="flex flex-col bg-slate-900/60 px-2 py-1.5 rounded border border-slate-700/40 text-sm">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-300 truncate mr-2">{model.name}</span>
+                                                {model.highlight && (
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${model.isNewLaunch ? 'bg-red-900/40 text-red-300 border border-red-900/50' : 'bg-blue-900/40 text-blue-300 border border-blue-900/50'}`}>
+                                                        {model.highlight}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {model.note && (
+                                                <div className="text-[10px] text-slate-500 mt-1 pl-1 border-l-2 border-slate-700/50">
+                                                    {model.note}
+                                                </div>
                                             )}
                                         </div>
                                     ))}

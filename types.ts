@@ -11,6 +11,7 @@ export interface CarModel {
   name: string;
   highlight: string;
   isNewLaunch: boolean;
+  note?: string; // Display note from CSV if available
 }
 
 export interface Brand {
@@ -20,7 +21,7 @@ export interface Brand {
   logo?: string;
   stockCode?: string; // e.g., HK.1211
   models: CarModel[];
-  fullModelList?: string[]; // Reserved for full car list
+  fullModelList?: string[]; 
   description: string;
 }
 

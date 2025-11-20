@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Hall, ZoneType } from '../types';
 
@@ -12,11 +13,11 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
   const [scale, setScale] = useState(0.75);
   const [position, setPosition] = useState({ x: 50, y: 50 });
   
-  // Interaction Refs for Pointer Events
-  const pointersRef = useRef<Map<number, { x: number, y: number }>>(new Map());
-  const prevDistRef = useRef<number | null>(null);
-  const lastPosRef = useRef<{ x: number, y: number } | null>(null);
-  const startDragPosRef = useRef<{ x: number, y: number } | null>(null);
+  // Dragging state
+  const isDragging = useRef(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const startPos = useRef({ x: 0, y: 0 });
+  const lastPos = useRef({ x: 0, y: 0 });
   
   // Zoom handlers
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
@@ -26,98 +27,42 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
       setPosition({ x: 50, y: 50 });
   };
 
-  // --- POINTER EVENTS FOR PINCH ZOOM & DRAG ---
-  
-  const handlePointerDown = (e: React.PointerEvent) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const handleDragStart = (e: React.PointerEvent) => {
+    isDragging.current = false;
+    startPos.current = { x: e.clientX, y: e.clientY };
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    lastPos.current = { ...position };
     
-    // Track start position to distinguish Click vs Drag later
-    if (pointersRef.current.size === 1) {
-        lastPosRef.current = { x: e.clientX, y: e.clientY };
-        startDragPosRef.current = { x: e.clientX, y: e.clientY };
-    }
-    // If two pointers, prepare for pinch
-    else if (pointersRef.current.size === 2) {
-        const points: { x: number; y: number }[] = Array.from(pointersRef.current.values());
-        const dist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-        prevDistRef.current = dist;
-    }
+    window.addEventListener('pointermove', handleDragMove);
+    window.addEventListener('pointerup', handleDragEnd);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!pointersRef.current.has(e.pointerId)) return;
-    
-    // Update current pointer position
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const handleDragMove = (e: PointerEvent) => {
+    const dx = e.clientX - startPos.current.x;
+    const dy = e.clientY - startPos.current.y;
 
-    // CASE 1: PINCH ZOOM (2 Fingers)
-    if (pointersRef.current.size === 2 && prevDistRef.current !== null) {
-        const points: { x: number; y: number }[] = Array.from(pointersRef.current.values());
-        const dist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-        
-        const delta = dist - prevDistRef.current;
-        const zoomFactor = delta * 0.005; 
-        
-        setScale(prev => {
-            const newScale = Math.min(Math.max(prev + zoomFactor, 0.5), 3);
-            return newScale;
-        });
-        
-        prevDistRef.current = dist;
-        lastPosRef.current = null; 
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      isDragging.current = true;
     }
-    // CASE 2: DRAG (1 Finger)
-    else if (pointersRef.current.size === 1 && lastPosRef.current) {
-        const dx = e.clientX - lastPosRef.current.x;
-        const dy = e.clientY - lastPosRef.current.y;
-        
-        setPosition(prev => ({
-            x: prev.x + dx,
-            y: prev.y + dy
-        }));
-        
-        lastPosRef.current = { x: e.clientX, y: e.clientY };
-    }
+
+    setPosition({
+      x: lastPos.current.x + dx,
+      y: lastPos.current.y + dy
+    });
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    e.currentTarget.releasePointerCapture(e.pointerId);
-    pointersRef.current.delete(e.pointerId);
-    
-    // HIT TEST FOR CLICK
-    // If we had 1 finger, and it moved very little, treat as click
-    if (startDragPosRef.current) {
-        const dist = Math.hypot(e.clientX - startDragPosRef.current.x, e.clientY - startDragPosRef.current.y);
-        if (dist < 10) { // 10px threshold for tap
-            // Perform Hit Test manually because PointerCapture/Transform can interfere with standard onClick
-            const element = document.elementFromPoint(e.clientX, e.clientY);
-            if (element) {
-                // Traverse up to find the group with data-hall-id
-                const hallGroup = element.closest('g[data-hall-id]');
-                if (hallGroup) {
-                    const hallId = hallGroup.getAttribute('data-hall-id');
-                    const hall = halls.find(h => h.id === hallId);
-                    if (hall && hall.brands.length > 0) {
-                        onHallSelect(hall);
-                    }
-                }
-            }
-        }
-    }
+  const handleDragEnd = () => {
+    window.removeEventListener('pointermove', handleDragMove);
+    window.removeEventListener('pointerup', handleDragEnd);
+    setTimeout(() => {
+      isDragging.current = false;
+    }, 50);
+  };
 
-    // Reset states
-    if (pointersRef.current.size < 2) {
-        prevDistRef.current = null;
-    }
-    if (pointersRef.current.size === 1) {
-        const p = pointersRef.current.values().next().value;
-        if (p) {
-            lastPosRef.current = { x: p.x, y: p.y };
-            startDragPosRef.current = { x: p.x, y: p.y };
-        }
-    } else {
-        startDragPosRef.current = null;
+  const handleHallClick = (e: React.MouseEvent, hall: Hall) => {
+    e.stopPropagation();
+    if (!isDragging.current && hall.brands.length > 0) {
+        onHallSelect(hall);
     }
   };
 
@@ -162,16 +107,12 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
       {/* Draggable Canvas */}
       <div 
         className="w-full h-full cursor-grab active:cursor-grabbing flex items-center justify-center bg-slate-950"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerDown={handleDragStart}
       >
         <div 
           style={{ 
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-            transition: pointersRef.current.size > 0 ? 'none' : 'transform 0.15s ease-out',
+            transition: isDragging.current ? 'none' : 'transform 0.1s ease-out',
             transformOrigin: 'center' 
           }}
         >
@@ -226,9 +167,15 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
                 const hall = halls.find(h => h.code === code);
                 if (!hall) return null;
                 return (
-                  <g key={hall.id} data-hall-id={hall.id} transform={`translate(${i * 120}, 0)`} className="cursor-pointer hover:opacity-90 transition-opacity">
+                  <g 
+                    key={hall.id} 
+                    data-hall-id={hall.id} 
+                    transform={`translate(${i * 120}, 0)`} 
+                    className="cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={(e) => handleHallClick(e, hall)}
+                  >
                     {/* Shadow */}
-                    <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none" />
+                    <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none"/>
                     {/* Block */}
                     <rect width="110" height="140" rx="8" fill={getFillColor(hall)} stroke="white" strokeWidth={hall.id === selectedHallId ? 4 : 1} />
                     <text x="55" y="60" fill="white" fontSize="28" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }} pointerEvents="none">{code}</text>
@@ -242,8 +189,14 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
                   const hall201 = halls.find(h => h.id === 'h20.1');
                   if (hall201) {
                       return (
-                          <g key={hall201.id} data-hall-id={hall201.id} transform={`translate(360, 160)`} className="cursor-pointer hover:opacity-90">
-                             <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none" />
+                          <g 
+                            key={hall201.id}
+                            data-hall-id={hall201.id}
+                            transform={`translate(360, 160)`} 
+                            className="cursor-pointer hover:opacity-90"
+                            onClick={(e) => handleHallClick(e, hall201)}
+                          >
+                             <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none"/>
                              <rect width="110" height="140" rx="8" fill={getFillColor(hall201)} stroke="white" strokeWidth={hall201.id === selectedHallId ? 4 : 1} />
                              <text x="55" y="60" fill="white" fontSize="28" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }} pointerEvents="none">20.1</text>
                              <text x="55" y="90" fill="rgba(255,255,255,0.9)" fontSize="16" textAnchor="middle" pointerEvents="none">1F</text>
@@ -280,8 +233,9 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
                     data-hall-id={hall.id}
                     transform={`translate(${i * 120}, 0)`}
                     className={`${hasBrands ? 'cursor-pointer hover:opacity-90' : 'cursor-not-allowed opacity-50'}`}
+                    onClick={(e) => handleHallClick(e, hall)}
                   >
-                    <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none" />
+                    <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none"/>
                     <rect width="110" height="140" rx="8" fill={getFillColor(hall)} stroke="white" strokeWidth={hall.id === selectedHallId ? 4 : 1} />
                     <text x="55" y="60" fill="white" fontSize="28" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }} pointerEvents="none">{code}</text>
                     <text x="55" y="90" fill="rgba(255,255,255,0.9)" fontSize="16" textAnchor="middle" pointerEvents="none">2F</text>
@@ -299,8 +253,9 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
                     data-hall-id={hall.id}
                     transform={`translate(${i * 120}, 160)`}
                     className="cursor-pointer hover:opacity-90"
+                    onClick={(e) => handleHallClick(e, hall)}
                   >
-                    <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none" />
+                    <rect x="10" y="10" width="110" height="140" rx="8" fill="rgba(0,0,0,0.5)" pointerEvents="none"/>
                     <rect width="110" height="140" rx="8" fill={getFillColor(hall)} stroke="white" strokeWidth={hall.id === selectedHallId ? 4 : 1} />
                     <text x="55" y="60" fill="white" fontSize="28" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }} pointerEvents="none">{code}</text>
                     <text x="55" y="90" fill="rgba(255,255,255,0.9)" fontSize="16" textAnchor="middle" pointerEvents="none">1F</text>
