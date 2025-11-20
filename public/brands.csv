@@ -1,9 +1,9 @@
-Hall,Booth,Brand,Category,Name,Tag,Note
+﻿Hall,Booth,Brand,Category,Name,Tag,Note
 1.1,A-101,广汽领程,Info,,,
 1.1,A-102,红旗,Info,,,(红旗天工，红旗金葵花)
-1.1,A-102,红旗,Key,HS6 PHEV,新车,
-1.1,A-104,大众,Info,,,(大众安徽, 一汽大众, 上汽大众)
-1.1,A-104,大众,Key,朗逸PRO,新车,
+1.1,A-102,红旗,Key,HS6 PHEV,新车,TEST
+1.1,A-104,大众,Info,,,(大众安徽，一汽大众，上汽大众)
+1.1,A-104,大众,Key,朗逸PRO,新车,TEST
 1.1,A-105,雷克萨斯,Info,,,
 2.1,B-102,仰望,Info,,,
 2.1,B-103,方程豹,Info,,,
@@ -30,7 +30,7 @@ Hall,Booth,Brand,Category,Name,Tag,Note
 3.1,C-106,克蒂汽车,Info,,,
 3.2,C-202,福特,Info,,,
 3.2,C-202,福特,Key,智趣烈马,新车,
-3.2,C-203,东风,Info,,,(奕派/风神/纳米)
+3.2,C-203,东风,Info,,,(奕派，风神，纳米)
 3.2,C-203,东风,Key,奕派007+,新车,
 3.2,C-204,名爵 MG,Info,,,
 3.2,C-205,深蓝汽车,Info,,,
