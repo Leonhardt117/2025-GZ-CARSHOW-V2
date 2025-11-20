@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Hall, ZoneType } from '../types';
 
 interface MapCanvasProps {
@@ -9,9 +9,23 @@ interface MapCanvasProps {
 }
 
 const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSelect }) => {
-  // Transformation state
-  const [scale, setScale] = useState(0.75);
-  const [position, setPosition] = useState({ x: 50, y: 50 });
+  // Center position adjustment (Calculated to center the specific SVG content visually)
+  // Content Center (Zones A & D) is approx (780, 520). SVG Center is (900, 600). 
+  // Delta needed: X = +120, Y = +80.
+  const initialX = 120;
+  const initialY = 80;
+  
+  const [position, setPosition] = useState({ x: initialX, y: initialY });
+  
+  // Calculate initial scale based on viewport width
+  const [scale, setScale] = useState(() => {
+      if (typeof window !== 'undefined') {
+          // Mobile devices (< 768px) get a smaller initial scale
+          // 0.34 is optimized to fit the ~1160px wide content area (Zone D to A) into ~390px screens
+          return window.innerWidth < 768 ? 0.34 : 0.75;
+      }
+      return 0.75;
+  });
   
   // Dragging state
   const isDragging = useRef(false);
@@ -21,10 +35,12 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
   
   // Zoom handlers
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
-  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.5));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.3));
   const handleReset = () => {
-      setScale(0.75);
-      setPosition({ x: 50, y: 50 });
+      // Reset logic also respects device size
+      const defaultScale = window.innerWidth < 768 ? 0.34 : 0.75;
+      setScale(defaultScale);
+      setPosition({ x: initialX, y: initialY });
   };
 
   const handleDragStart = (e: React.PointerEvent) => {
@@ -32,6 +48,12 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
     startPos.current = { x: e.clientX, y: e.clientY };
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     lastPos.current = { ...position };
+    
+    // Important: capturing pointer events helps with dragging consistency
+    const target = e.target as Element;
+    if (target.setPointerCapture && e.pointerId) {
+        target.setPointerCapture(e.pointerId);
+    }
     
     window.addEventListener('pointermove', handleDragMove);
     window.addEventListener('pointerup', handleDragEnd);
@@ -51,9 +73,16 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
     });
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e: PointerEvent) => {
     window.removeEventListener('pointermove', handleDragMove);
     window.removeEventListener('pointerup', handleDragEnd);
+    
+    // Release pointer capture if applicable
+    const target = e.target as Element;
+    if (target.releasePointerCapture && e.pointerId) {
+        target.releasePointerCapture(e.pointerId);
+    }
+
     setTimeout(() => {
       isDragging.current = false;
     }, 50);
@@ -106,7 +135,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
 
       {/* Draggable Canvas */}
       <div 
-        className="w-full h-full cursor-grab active:cursor-grabbing flex items-center justify-center bg-slate-950"
+        className="w-full h-full cursor-grab active:cursor-grabbing flex items-center justify-center bg-slate-950 touch-none"
         onPointerDown={handleDragStart}
       >
         <div 

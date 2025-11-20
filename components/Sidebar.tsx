@@ -11,8 +11,8 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imgError, setImgError] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-
-  // Reset image error state when hall changes
+  
+  // Reset states when hall changes
   useEffect(() => {
     setImgError(false);
     setIsImageModalOpen(false);
@@ -21,18 +21,46 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
     }
   }, [hall]);
 
+  // Handle scrolling to highlighted brand
   useEffect(() => {
     if (highlightedBrandId && hall) {
-        const el = document.getElementById(`brand-${highlightedBrandId}`);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            el.classList.add('ring-2', 'ring-amber-500', 'bg-slate-800');
-            setTimeout(() => {
-                el.classList.remove('ring-2', 'ring-amber-500');
-            }, 2000);
-        }
+        // Use a timeout to ensure the DOM is fully updated and sidebar transition is active/done
+        const timer = setTimeout(() => {
+            const el = document.getElementById(`brand-${highlightedBrandId}`);
+            const container = containerRef.current;
+            
+            if (el && container) {
+                // Calculate position manually to avoid 'scrollIntoView' shifting the entire page on mobile
+                const elTop = el.offsetTop;
+                const elHeight = el.offsetHeight;
+                const containerHeight = container.offsetHeight;
+                
+                // Center the element in the container
+                container.scrollTo({
+                    top: elTop - (containerHeight / 2) + (elHeight / 2),
+                    behavior: 'smooth'
+                });
+
+                el.classList.add('ring-2', 'ring-amber-500', 'bg-slate-800');
+                
+                // Remove highlight ring after animation
+                setTimeout(() => {
+                   if (el) el.classList.remove('ring-2', 'ring-amber-500');
+                }, 2000);
+            }
+        }, 300); // 300ms delay matches CSS transition duration
+
+        return () => clearTimeout(timer);
     }
   }, [highlightedBrandId, hall]);
+
+  const getTagStyle = (tag: string) => {
+      if (tag.includes('新车')) return 'bg-red-900/40 text-red-300 border border-red-900/50';
+      if (tag.includes('首发')) return 'bg-purple-900/40 text-purple-300 border border-purple-900/50';
+      if (tag.includes('换代')) return 'bg-blue-900/40 text-blue-300 border border-blue-900/50';
+      // Default fallback
+      return 'bg-slate-800 text-slate-300 border border-slate-700';
+  };
 
   if (!hall) {
     return (
@@ -126,18 +154,19 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
       )}
 
       {/* Brand List */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 custom-scrollbar">
+      <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 custom-scrollbar relative">
         {sortedBrands.length === 0 ? (
              <div className="text-center text-slate-500 py-10">暂无展位数据</div>
         ) : (
             sortedBrands.map((brand) => {
                 const isHighlighted = brand.id === highlightedBrandId;
+
                 return (
                     <div 
                         key={brand.id} 
                         id={`brand-${brand.id}`}
                         className={`
-                            rounded-lg border p-3 transition-all duration-300 w-full
+                            rounded-lg border p-3 transition-all duration-300 w-full relative
                             ${isHighlighted 
                                 ? 'bg-slate-800 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
                                 : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600'
@@ -146,11 +175,13 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                     >
                         {/* Header: Booth & Name */}
                         <div className="flex flex-col gap-1 mb-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-amber-500 font-mono font-bold text-sm shrink-0">{brand.booth}</span>
-                                <h4 className={`font-bold text-base truncate ${isHighlighted ? 'text-amber-100' : 'text-slate-200'}`}>
-                                    {brand.name}
-                                </h4>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <span className="text-amber-500 font-mono font-bold text-sm shrink-0">{brand.booth}</span>
+                                    <h4 className={`font-bold text-base truncate ${isHighlighted ? 'text-amber-100' : 'text-slate-200'}`}>
+                                        {brand.name}
+                                    </h4>
+                                </div>
                             </div>
                             {brand.description && (
                                 <p className="text-xs text-slate-500 ml-0.5">{brand.description}</p>
@@ -167,7 +198,7 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                                             <div className="flex items-center justify-between">
                                                 <span className="text-slate-300 truncate mr-2">{model.name}</span>
                                                 {model.highlight && (
-                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${model.isNewLaunch ? 'bg-red-900/40 text-red-300 border border-red-900/50' : 'bg-blue-900/40 text-blue-300 border border-blue-900/50'}`}>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${getTagStyle(model.highlight)}`}>
                                                         {model.highlight}
                                                     </span>
                                                 )}

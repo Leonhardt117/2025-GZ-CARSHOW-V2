@@ -25,12 +25,6 @@ export interface Brand {
   description: string;
 }
 
-export interface InvestmentInsight {
-  brandName: string;
-  analysis: string;
-  sentiment: 'Bullish' | 'Neutral' | 'Bearish';
-}
-
 export interface Hall {
   id: string;
   code: string; // e.g., "1.1", "2.1"
@@ -39,4 +33,10 @@ export interface Hall {
   type: ZoneType;
   brands: Brand[];
   occupancy: number; // 0-100%
+}
+
+export interface InvestmentInsight {
+  brandName: string;
+  analysis: string;
+  sentiment: 'Bullish' | 'Neutral' | 'Bearish';
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import MapCanvas from './components/MapCanvas';
 import Sidebar from './components/Sidebar';
@@ -38,7 +39,7 @@ const App: React.FC = () => {
   const selectedHall = halls.find(h => h.id === selectedHallId) || null;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden font-sans overscroll-none">
+    <div className="flex flex-col h-screen supports-[height:100dvh]:h-[100dvh] bg-slate-950 text-white overflow-hidden font-sans overscroll-none">
       {/* Top Navigation Bar */}
       <header className="h-14 border-b border-slate-800 bg-slate-900 flex items-center px-3 sm:px-4 justify-between shrink-0 z-30 shadow-lg relative">
         <div className="flex items-center gap-2 sm:gap-3">
