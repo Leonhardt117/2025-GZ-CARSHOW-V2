@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Hall, ZoneType } from '../types';
 
@@ -9,19 +8,41 @@ interface MapCanvasProps {
 }
 
 const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSelect }) => {
+  // ==================================================================================
+  //  手机端强制参数配置 (Mobile First Configuration)
+  // ==================================================================================
   
-  // 【修改点 1】直接写死适合手机的参数，不再判断 window
-  // 画面偏左，说明需要把地图往右移。
-  // 之前是 120，如果觉得偏左，我们直接加到 220 试试，让它强制居中。
-  const initialX = 220; 
-  const initialY = 120;
+  // 1. 强制缩放比例：0.32
+  // 这个比例能保证1800px宽的地图在手机上不会撑爆屏幕，且文字可见
+  const MOBILE_SCALE = 0.32;
+
+  // 2. 强制位置偏移：X=180, Y=100
+  // "画面偏左"意味着我们需要把地图向右推 (增加 X 值)
+  // 180px 的偏移量应该能把 D区/A区 推到屏幕正中间
+  const MOBILE_POS = { x: 180, y: 100 };
+
+  // 初始化状态 (直接使用强制参数)
+  const [scale, setScale] = useState(MOBILE_SCALE);
+  const [position, setPosition] = useState(MOBILE_POS);
+
+  // ==================================================================================
+  //  自动修正 (Auto-Correction)
+  // ==================================================================================
   
- // 【修改点 2】强制使用手机端的缩放比例 (0.34)
-  // 不再检测 window.innerWidth，防止手机浏览器识别失败变成了电脑版(0.75)
-  const [scale, setScale] = useState(0.34);
-  
-  const [position, setPosition] = useState({ x: initialX, y: initialY });
-  
+  // 解决手机浏览器地址栏/导航栏加载导致的布局跳动问题
+  // 页面挂载 100ms 后，强制再次应用正确的位置
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setScale(MOBILE_SCALE);
+      setPosition(MOBILE_POS);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ==================================================================================
+  //  交互逻辑 (Interaction Logic)
+  // ==================================================================================
+
   // Dragging state
   const isDragging = useRef(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
@@ -29,21 +50,21 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
   const lastPos = useRef({ x: 0, y: 0 });
   
   // Zoom handlers
-  const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
-  const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.3));
-
-  const handleReset = () => {
-      setScale(0.34);
-      setPosition({ x: initialX, y: initialY });
-  };
+  const handleZoomIn = () => setScale(s => Math.min(s + 0.1, 3));
+  const handleZoomOut = () => setScale(s => Math.max(s - 0.1, 0.2));
   
+  const handleReset = () => {
+      // 重置时，始终回到强制的手机参数
+      setScale(MOBILE_SCALE);
+      setPosition(MOBILE_POS);
+  };
+
   const handleDragStart = (e: React.PointerEvent) => {
     isDragging.current = false;
     startPos.current = { x: e.clientX, y: e.clientY };
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     lastPos.current = { ...position };
     
-    // Important: capturing pointer events helps with dragging consistency
     const target = e.target as Element;
     if (target.setPointerCapture && e.pointerId) {
         target.setPointerCapture(e.pointerId);
@@ -71,7 +92,6 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
     window.removeEventListener('pointermove', handleDragMove);
     window.removeEventListener('pointerup', handleDragEnd);
     
-    // Release pointer capture if applicable
     const target = e.target as Element;
     if (target.releasePointerCapture && e.pointerId) {
         target.releasePointerCapture(e.pointerId);
@@ -91,15 +111,15 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
 
   const getFillColor = (hall: Hall) => {
     const isSelected = hall.id === selectedHallId;
-    if (isSelected) return '#f59e0b'; // Amber-500
-    if (hall.id === 'h1.2') return '#1e293b'; // Grey placeholder
+    if (isSelected) return '#f59e0b'; 
+    if (hall.id === 'h1.2') return '#1e293b'; 
 
     switch (hall.type) {
-      case ZoneType.NEV: return '#059669'; // Emerald-600
-      case ZoneType.LUXURY: return '#7c3aed'; // Violet-600
-      case ZoneType.PASSENGER: return '#2563eb'; // Blue-600
-      case ZoneType.COMPONENTS: return '#475569'; // Slate-600
-      default: return '#334155'; // Slate-700
+      case ZoneType.NEV: return '#059669'; 
+      case ZoneType.LUXURY: return '#7c3aed'; 
+      case ZoneType.PASSENGER: return '#2563eb'; 
+      case ZoneType.COMPONENTS: return '#475569'; 
+      default: return '#334155'; 
     }
   };
 
