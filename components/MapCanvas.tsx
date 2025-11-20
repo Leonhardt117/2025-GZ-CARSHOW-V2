@@ -9,13 +9,17 @@ interface MapCanvasProps {
 }
 
 const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSelect }) => {
-  // Center position adjustment (Calculated to center the specific SVG content visually)
-  // Content Center (Zones A & D) is approx (780, 520). SVG Center is (900, 600). 
-  // Delta needed: X = +120, Y = +80.
-  const initialX = 120;
-  const initialY = 80;
-  
-  const [position, setPosition] = useState({ x: initialX, y: initialY });
+
+  const [position, setPosition] = useState(() => {
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          // 【手机端适配】
+          // 手机屏幕窄，且 scale 较小 (0.34)，偏移量也要相应减小
+          // 设置为 x: 50 左右即可将 A区/D区中心对准屏幕
+          return { x: 50, y: 40 }; 
+      }
+      // 【电脑端】保持原有的偏移量
+      return { x: 120, y: 80 };
+  });
   
   // Calculate initial scale based on viewport width
   const [scale, setScale] = useState(() => {
@@ -36,11 +40,13 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
   // Zoom handlers
   const handleZoomIn = () => setScale(s => Math.min(s + 0.2, 3));
   const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.3));
+
   const handleReset = () => {
-      // Reset logic also respects device size
-      const defaultScale = window.innerWidth < 768 ? 0.34 : 0.75;
-      setScale(defaultScale);
-      setPosition({ x: initialX, y: initialY });
+      const isMobile = window.innerWidth < 768;
+      // 重置缩放
+      setScale(isMobile ? 0.34 : 0.75);
+      // 重置位置 (同步修改这里的逻辑)
+      setPosition(isMobile ? { x: 50, y: 40 } : { x: 120, y: 80 });
   };
 
   const handleDragStart = (e: React.PointerEvent) => {
