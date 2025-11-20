@@ -9,27 +9,18 @@ interface MapCanvasProps {
 }
 
 const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSelect }) => {
-
-  const [position, setPosition] = useState(() => {
-      if (typeof window !== 'undefined' && window.innerWidth < 768) {
-          // 【手机端适配】
-          // 手机屏幕窄，且 scale 较小 (0.34)，偏移量也要相应减小
-          // 设置为 x: 50 左右即可将 A区/D区中心对准屏幕
-          return { x: 50, y: 40 }; 
-      }
-      // 【电脑端】保持原有的偏移量
-      return { x: 120, y: 80 };
-  });
   
-  // Calculate initial scale based on viewport width
-  const [scale, setScale] = useState(() => {
-      if (typeof window !== 'undefined') {
-          // Mobile devices (< 768px) get a smaller initial scale
-          // 0.34 is optimized to fit the ~1160px wide content area (Zone D to A) into ~390px screens
-          return window.innerWidth < 768 ? 0.34 : 0.75;
-      }
-      return 0.75;
-  });
+  // 【修改点 1】直接写死适合手机的参数，不再判断 window
+  // 画面偏左，说明需要把地图往右移。
+  // 之前是 120，如果觉得偏左，我们直接加到 220 试试，让它强制居中。
+  const initialX = 220; 
+  const initialY = 120;
+  
+ // 【修改点 2】强制使用手机端的缩放比例 (0.34)
+  // 不再检测 window.innerWidth，防止手机浏览器识别失败变成了电脑版(0.75)
+  const [scale, setScale] = useState(0.34);
+  
+  const [position, setPosition] = useState({ x: initialX, y: initialY });
   
   // Dragging state
   const isDragging = useRef(false);
@@ -42,13 +33,10 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
   const handleZoomOut = () => setScale(s => Math.max(s - 0.2, 0.3));
 
   const handleReset = () => {
-      const isMobile = window.innerWidth < 768;
-      // 重置缩放
-      setScale(isMobile ? 0.34 : 0.75);
-      // 重置位置 (同步修改这里的逻辑)
-      setPosition(isMobile ? { x: 50, y: 40 } : { x: 120, y: 80 });
+      setScale(0.34);
+      setPosition({ x: initialX, y: initialY });
   };
-
+  
   const handleDragStart = (e: React.PointerEvent) => {
     isDragging.current = false;
     startPos.current = { x: e.clientX, y: e.clientY };
