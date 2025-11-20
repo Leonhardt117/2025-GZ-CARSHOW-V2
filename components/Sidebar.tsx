@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Hall } from '../types';
 
@@ -33,6 +32,15 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
         }
     }
   }, [highlightedBrandId, hall]);
+
+  // Helper to determine tag color
+  const getTagStyle = (tag: string) => {
+      if (!tag) return 'bg-slate-800 text-slate-400 border-slate-700';
+      if (tag.includes('新车')) return 'bg-red-900/40 text-red-300 border border-red-900/50';
+      if (tag.includes('换代')) return 'bg-blue-900/40 text-blue-300 border border-blue-900/50';
+      if (tag.includes('首发')) return 'bg-purple-900/40 text-purple-300 border border-purple-900/50';
+      return 'bg-slate-800 text-slate-300 border border-slate-700'; // Default for others (Technology, Concept, etc.)
+  };
 
   if (!hall) {
     return (
@@ -167,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                                             <div className="flex items-center justify-between">
                                                 <span className="text-slate-300 truncate mr-2">{model.name}</span>
                                                 {model.highlight && (
-                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${model.isNewLaunch ? 'bg-red-900/40 text-red-300 border border-red-900/50' : 'bg-blue-900/40 text-blue-300 border border-blue-900/50'}`}>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${getTagStyle(model.highlight)}`}>
                                                         {model.highlight}
                                                     </span>
                                                 )}
