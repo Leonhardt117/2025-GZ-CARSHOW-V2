@@ -19,7 +19,7 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
   // 2. 强制位置偏移：X=180, Y=100
   // "画面偏左"意味着我们需要把地图向右推 (增加 X 值)
   // 180px 的偏移量应该能把 D区/A区 推到屏幕正中间
-  const MOBILE_POS = { x: 200, y: 100 };
+  const MOBILE_POS = { x: 0, y: 100 };
 
   // 初始化状态 (直接使用强制参数)
   const [scale, setScale] = useState(MOBILE_SCALE);
