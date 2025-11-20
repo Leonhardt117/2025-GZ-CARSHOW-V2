@@ -14,12 +14,12 @@ const MapCanvas: React.FC<MapCanvasProps> = ({ halls, selectedHallId, onHallSele
   
   // 1. 强制缩放比例：0.32
   // 这个比例能保证1800px宽的地图在手机上不会撑爆屏幕，且文字可见
-  const MOBILE_SCALE = 0.9;
+  const MOBILE_SCALE = 0.8;
 
   // 2. 强制位置偏移：X=180, Y=100
   // "画面偏左"意味着我们需要把地图向右推 (增加 X 值)
   // 180px 的偏移量应该能把 D区/A区 推到屏幕正中间
-  const MOBILE_POS = { x: -200, y: 100 };
+  const MOBILE_POS = { x: -400, y: 100 };
 
   // 初始化状态 (直接使用强制参数)
   const [scale, setScale] = useState(MOBILE_SCALE);
