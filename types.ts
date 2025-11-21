@@ -21,7 +21,7 @@ export interface Brand {
   logo?: string;
   stockCode?: string; // e.g., HK.1211
   models: CarModel[];
-  fullModelList?: string[]; 
+  fullModelList?: CarModel[]; // Changed to CarModel[] to support structure
   description: string;
 }
 
