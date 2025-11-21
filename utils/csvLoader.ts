@@ -1,5 +1,5 @@
 
-import { Hall, Brand } from '../types';
+import { Hall, Brand, CarModel } from '../types';
 
 export const parseBrandsCSV = async (csvUrl: string, skeletonHalls: Hall[]): Promise<Hall[]> => {
   try {
@@ -68,8 +68,13 @@ export const parseBrandsCSV = async (csvUrl: string, skeletonHalls: Hall[]): Pro
       else if (category === 'Normal') {
           if (modelName) {
               if (!brand.fullModelList) brand.fullModelList = [];
-              const displayName = tag ? `${modelName} (${tag})` : modelName;
-              brand.fullModelList.push(displayName);
+              // Push full object structure instead of string
+              brand.fullModelList.push({
+                  name: modelName,
+                  highlight: tag || '',
+                  isNewLaunch: false,
+                  note: note
+              });
           }
       }
     });
