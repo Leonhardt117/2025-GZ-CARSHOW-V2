@@ -214,12 +214,28 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                             </div>
                         )}
 
-                        {/* Section 2: Full List (Text List) */}
+                        {/* Section 2: Full List (Structured List) */}
                         {brand.fullModelList && brand.fullModelList.length > 0 && (
                              <div>
                                 <div className="text-[10px] text-slate-500 font-semibold mb-1 uppercase tracking-wider">全系参展 (All Models)</div>
-                                <div className="bg-slate-900/30 rounded p-2 text-xs text-slate-400 leading-relaxed border border-slate-800">
-                                    {brand.fullModelList.join(' · ')}
+                                <div className="grid grid-cols-1 gap-1.5">
+                                    {brand.fullModelList.map((model, idx) => (
+                                        <div key={idx} className="flex flex-col px-2 py-1 rounded border border-slate-800 bg-slate-900/30 hover:bg-slate-900/50 transition-colors">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-300 text-xs truncate mr-2">{model.name}</span>
+                                                {model.highlight && (
+                                                     <span className={`text-[10px] px-1.5 py-0 rounded whitespace-nowrap scale-90 origin-right ${getTagStyle(model.highlight)}`}>
+                                                        {model.highlight}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {model.note && (
+                                                <div className="text-[10px] text-slate-500 mt-0.5 pl-1 border-l-2 border-slate-700/30 leading-tight">
+                                                    {model.note}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
