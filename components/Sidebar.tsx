@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Hall } from '../types';
 
@@ -211,8 +210,8 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                         `}
                     >
                         {/* Header: Booth & Name */}
-                        <div className="flex items-start justify-between mb-3">
-                            <div className="flex flex-col gap-1 overflow-hidden">
+                        <div className="flex items-start justify-between mb-2">
+                            <div className="flex flex-col gap-1 overflow-hidden flex-1 mr-2">
                                 <div className="flex items-center gap-3">
                                     <span className="text-amber-500 font-mono font-bold text-base shrink-0">{brand.booth}</span>
                                     <h4 className={`font-bold text-xl truncate ${isHighlighted ? 'text-amber-100' : 'text-white'}`}>
@@ -221,13 +220,13 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                                 </div>
                                 {/* Brand Description (Hidden when collapsed) */}
                                 {isExpanded && brand.description && (
-                                    <p className="text-sm text-slate-200 ml-0.5 animate-in fade-in slide-in-from-top-1 duration-200 leading-relaxed mt-1">
+                                    <div className="mt-2 mb-1 p-2 bg-blue-950/30 border border-blue-900/30 rounded text-sm text-blue-200 leading-relaxed animate-in fade-in">
                                         {brand.description}
-                                    </p>
+                                    </div>
                                 )}
                             </div>
                             {/* Chevron Icon */}
-                             <div className={`text-slate-400 transition-transform duration-300 mt-1.5 ${isExpanded ? 'rotate-180' : ''}`}>
+                             <div className={`text-slate-400 transition-transform duration-300 mt-1.5 shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6">
                                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                                 </svg>
@@ -236,22 +235,31 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
                         
                         {/* Section 1: Highlights (Badges) */}
                         {brand.models.length > 0 && (
-                            <div className={`${isExpanded ? 'mb-4' : ''}`}>
-                                <div className="grid grid-cols-1 gap-2.5">
+                            <div className="mt-3">
+                                <div className="text-[10px] font-bold text-amber-500/80 mb-2 uppercase tracking-wider flex items-center gap-1">
+                                     <span className="w-1 h-1 rounded-full bg-amber-500 inline-block"></span>
+                                     重点新车 (HIGHLIGHTS)
+                                </div>
+                                <div className="grid grid-cols-1 gap-2">
                                     {brand.models.map((model, idx) => (
-                                        <div key={idx} className="flex flex-col bg-slate-900/60 px-3 py-2 rounded-lg border border-slate-700/40">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-slate-100 font-medium text-lg truncate mr-2">{model.name}</span>
+                                        <div key={idx} className="flex flex-col bg-slate-900/60 rounded-lg border border-slate-700/40 overflow-hidden">
+                                            {/* Main Row: Name & Tag */}
+                                            <div className="flex items-center justify-between px-3 py-2.5">
+                                                <span className="text-slate-100 font-bold text-lg truncate mr-2">{model.name}</span>
                                                 {model.highlight && (
-                                                    <span className={`text-xs font-bold px-2 py-1 rounded whitespace-nowrap ${getTagStyle(model.highlight)}`}>
+                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded whitespace-nowrap shadow-sm ${getTagStyle(model.highlight)}`}>
                                                         {model.highlight}
                                                     </span>
                                                 )}
                                             </div>
-                                            {/* Note displayed only when expanded */}
+                                            {/* Note (Displayed only when expanded, with distinct styling) */}
                                             {isExpanded && model.note && (
-                                                <div className="text-sm text-slate-200 mt-1.5 pl-2 border-l-2 border-slate-600/50 animate-in fade-in slide-in-from-top-1 duration-200 leading-snug">
-                                                    {model.note}
+                                                <div className="px-3 pb-3 pt-0 animate-in fade-in slide-in-from-top-1">
+                                                    <div className="bg-slate-950/60 rounded p-2.5 text-sm text-slate-200 border border-slate-800 shadow-inner leading-relaxed relative">
+                                                        {/* Decorative corner */}
+                                                        <div className="absolute top-0 left-0 w-full h-full border-l-2 border-slate-600/50 rounded-l opacity-50 pointer-events-none"></div>
+                                                        {model.note}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -262,25 +270,29 @@ const Sidebar: React.FC<SidebarProps> = ({ hall, highlightedBrandId }) => {
 
                         {/* Section 2: Full List (Structured List) */}
                         {brand.fullModelList && brand.fullModelList.length > 0 && (
-                             <div className={`${!isExpanded && !brand.models.length ? '' : 'mt-3'}`}>
-                                {/* Optional: Hide label when collapsed to save space? Keeping it for structure. */}
-                                {isExpanded && <div className="text-xs text-slate-400 font-bold mb-2 uppercase tracking-wider animate-in fade-in">全系参展 (All Models)</div>}
+                             <div className="mt-4">
+                                <div className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider flex items-center gap-1">
+                                     <span className="w-1 h-1 rounded-full bg-slate-600 inline-block"></span>
+                                     全系参展 (ALL MODELS)
+                                </div>
                                 
                                 <div className="grid grid-cols-1 gap-2">
                                     {brand.fullModelList.map((model, idx) => (
-                                        <div key={idx} className="flex flex-col px-3 py-2 rounded border border-slate-800 bg-slate-900/30 hover:bg-slate-900/50 transition-colors">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-slate-200 text-base truncate mr-2">{model.name}</span>
+                                        <div key={idx} className="flex flex-col rounded border border-slate-800 bg-slate-900/30 transition-colors hover:bg-slate-900/50">
+                                            <div className="flex items-center justify-between px-3 py-2">
+                                                <span className="text-slate-300 text-base font-medium truncate mr-2">{model.name}</span>
                                                 {model.highlight && (
                                                      <span className={`text-[10px] px-2 py-0.5 rounded whitespace-nowrap ${getTagStyle(model.highlight)}`}>
                                                         {model.highlight}
                                                     </span>
                                                 )}
                                             </div>
-                                            {/* Note displayed only when expanded */}
+                                            {/* Note (Displayed only when expanded) */}
                                             {isExpanded && model.note && (
-                                                <div className="text-sm text-slate-200 mt-1 pl-2 border-l-2 border-slate-700/50 leading-tight animate-in fade-in slide-in-from-top-1 duration-200">
-                                                    {model.note}
+                                                <div className="px-3 pb-2 pt-0 animate-in fade-in slide-in-from-top-1">
+                                                    <div className="bg-slate-950/40 rounded p-2 text-sm text-slate-400 border-t border-slate-800/50 leading-tight">
+                                                        {model.note}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
