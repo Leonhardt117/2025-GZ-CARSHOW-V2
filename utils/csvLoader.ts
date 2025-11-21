@@ -17,7 +17,18 @@ export const parseBrandsCSV = async (csvUrl: string, skeletonHalls: Hall[]): Pro
     const brandMap = new Map<string, Brand>();
 
     rows.forEach(row => {
-      const cols = row.split(',').map(c => c.trim());
+      // Regex matches: split by comma ONLY if it's followed by an even number of quotes
+      // This handles "Comma, Inside, Quote" correctly
+      const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => {
+          let val = c.trim();
+          // Remove surrounding quotes
+          if (val.startsWith('"') && val.endsWith('"')) {
+              val = val.slice(1, -1);
+          }
+          // Handle CSV escape for quote ("")
+          return val.replace(/""/g, '"');
+      });
+
       if (cols.length < 3) return;
 
       const [hallCode, booth, brandName, category, modelName, tag, note] = cols;
